@@ -242,6 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Open announcement dialog
   announcementButton.addEventListener("click", () => {
     announcementDialog.classList.remove("hidden");
+    fetchAnnouncements();
   });
 
   // Close announcement dialog
