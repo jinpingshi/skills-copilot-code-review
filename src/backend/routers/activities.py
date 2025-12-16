@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from typing import Dict, Any, Optional, List
 
-from ..database import activities_collection, teachers_collection
+from ..database import activities_collection, teachers_collection, announcements_collection
 
 router = APIRouter(
     prefix="/activities",
@@ -136,3 +136,28 @@ def unregister_from_activity(activity_name: str, email: str, teacher_username: O
             status_code=500, detail="Failed to update activity")
 
     return {"message": f"Unregistered {email} from {activity_name}"}
+
+
+@router.get("/announcements", response_model=List[Dict[str, Any]])
+def get_announcements(username: Optional[str] = Query(None)):
+    """Retrieve all announcements - requires authentication"""
+    # Check if user is authenticated
+    if not username:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Verify the user exists
+    teacher = teachers_collection.find_one({"_id": username})
+    if not teacher:
+        raise HTTPException(status_code=401, detail="Invalid username")
+
+    # Fetch announcements from the database
+    announcements = []
+    for announcement in announcements_collection.find():
+        announcements.append({
+            "title": announcement["title"],
+            "content": announcement["content"],
+            "start_date": announcement.get("start_date"),
+            "expiration_date": announcement["expiration_date"]
+        })
+
+    return announcements
