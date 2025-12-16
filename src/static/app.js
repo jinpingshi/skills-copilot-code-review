@@ -271,22 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
       announcementList.innerHTML = "";
 
       if (announcements.length === 0) {
-        
-        const strong = document.createElement("strong");
-        strong.textContent = announcement.title;
-        li.appendChild(strong);
-
-        li.appendChild(document.createElement("br"));
-
-        const small = document.createElement("small");
-        small.textContent = announcement.content;
-        li.appendChild(small);
-
-        li.appendChild(document.createElement("br"));
-
-        const em = document.createElement("em");
-        em.textContent = `Expires: ${announcement.expiration_date}`;
-        li.appendChild(em);
+        announcementList.innerHTML = "<li>No announcements available</li>";
         return;
       }
 
