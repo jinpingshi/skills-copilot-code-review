@@ -720,7 +720,7 @@ footer {
 }
 
 #add-announcement-button {
-  background-color: #4caf50;
+  background-color: #2e7d32; /* Updated for better contrast */
   color: white;
 }
 
