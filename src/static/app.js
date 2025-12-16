@@ -302,126 +302,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Fetch announcements on dialog open
-  const openAnnouncementsDialogBtn = document.getElementById("open-announcements-dialog");
-  if (openAnnouncementsDialogBtn) {
-    openAnnouncementsDialogBtn.addEventListener("click", () => {
-      fetchAnnouncements();
-    });
-  }
-  // Initialize filters from active elements
-  function initializeFilters() {
-    // Initialize day filter
-    const activeDayFilter = document.querySelector(".day-filter.active");
-    if (activeDayFilter) {
-      currentDay = activeDayFilter.dataset.day;
-    }
+  // Event listeners for authentication
+  loginButton.addEventListener("click", openLoginModal);
+  logoutButton.addEventListener("click", logout);
+  closeLoginModal.addEventListener("click", closeLoginModalHandler);
 
-    // Initialize time filter
-    const activeTimeFilter = document.querySelector(".time-filter.active");
-    if (activeTimeFilter) {
-      currentTimeRange = activeTimeFilter.dataset.time;
-    }
-  }
-
-  // Check if user is already logged in (from localStorage)
-  function checkAuthentication() {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      try {
-        currentUser = JSON.parse(savedUser);
-        updateAuthUI();
-        // Verify the stored user with the server
-        validateUserSession(currentUser.username);
-      } catch (error) {
-        console.error("Error parsing saved user", error);
-        logout(); // Clear invalid data
-      }
-    }
-
-    // Set authentication class on body
-    updateAuthBodyClass();
-  }
-
-  // Validate user session with the server
-  async function validateUserSession(username) {
-    try {
-      const response = await fetch(
-        `/auth/check-session?username=${encodeURIComponent(username)}`
-      );
-
-      if (!response.ok) {
-        // Session invalid, log out
-        logout();
-        return;
-      }
-
-      // Session is valid, update user data
-      const userData = await response.json();
-      currentUser = userData;
-      localStorage.setItem("currentUser", JSON.stringify(userData));
-      updateAuthUI();
-    } catch (error) {
-      console.error("Error validating session:", error);
-    }
-  }
-
-  // Update UI based on authentication state
-  function updateAuthUI() {
-    if (currentUser) {
-      loginButton.classList.add("hidden");
-      userInfo.classList.remove("hidden");
-      displayName.textContent = currentUser.display_name;
-    } else {
-      loginButton.classList.remove("hidden");
-      userInfo.classList.add("hidden");
-      displayName.textContent = "";
-    }
-
-    updateAuthBodyClass();
-    // Refresh the activities to update the UI
-    fetchActivities();
-  }
-
-  // Update body class for CSS targeting
-  function updateAuthBodyClass() {
-    if (currentUser) {
-      document.body.classList.remove("not-authenticated");
-    } else {
-      document.body.classList.add("not-authenticated");
-    }
-  }
-
-  // Login function
-  async function login(username, password) {
-    try {
-      const response = await fetch(
-        `/auth/login?username=${encodeURIComponent(
-          username
-        )}&password=${encodeURIComponent(password)}`,
-        {
-          method: "POST",
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        showLoginMessage(
-          data.detail || "Invalid username or password",
-          "error"
-        );
-        return false;
-      }
-
-      // Login successful
-      currentUser = data;
-      localStorage.setItem("currentUser", JSON.stringify(data));
-      updateAuthUI();
+  // Close login modal when clicking outside
+  window.addEventListener("click", (event) => {
+    if (event.target === loginModal) {
       closeLoginModalHandler();
-      showMessage(`Welcome, ${currentUser.display_name}!`, "success");
-      return true;
-    } catch (error) {
+    }
+  });
+
+  // Handle login form submission
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    await login(username, password);
+  });
+
   // Show loading skeletons
   function showLoadingSkeletons() {
     activitiesList.innerHTML = "";
