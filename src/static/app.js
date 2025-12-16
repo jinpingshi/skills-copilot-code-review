@@ -491,12 +491,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Open login modal
-  function openLoginModal() {
-    loginModal.classList.remove("hidden");
-    loginModal.classList.add("show");
-    loginMessage.classList.add("hidden");
-    loginForm.reset();
-  }
 
   // Close login modal
   function closeLoginModalHandler() {
