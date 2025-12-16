@@ -323,8 +323,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Fetch announcements on dialog open
-
-
+  const openAnnouncementsDialogBtn = document.getElementById("open-announcements-dialog");
+  if (openAnnouncementsDialogBtn) {
+    openAnnouncementsDialogBtn.addEventListener("click", () => {
+      fetchAnnouncements();
+    });
+  }
   // Initialize filters from active elements
   function initializeFilters() {
     // Initialize day filter
