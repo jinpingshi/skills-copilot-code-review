@@ -339,38 +339,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to set day filter
-  function setDayFilter(day) {
-    currentDay = day;
-
-    // Update active class
-    dayFilters.forEach((btn) => {
-      if (btn.dataset.day === day) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
-    });
-
-    fetchActivities();
-  }
-
-  // Function to set time range filter
-  function setTimeRangeFilter(timeRange) {
-    currentTimeRange = timeRange;
-
-    // Update active class
-    timeFilters.forEach((btn) => {
-      if (btn.dataset.time === timeRange) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
-    });
-
-    fetchActivities();
-  }
-
   // Check if user is already logged in (from localStorage)
   function checkAuthentication() {
     const savedUser = localStorage.getItem("currentUser");
