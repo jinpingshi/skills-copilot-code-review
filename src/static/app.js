@@ -258,13 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const response = await fetch('/activities/announcements', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username: currentUser.username })
-      });
+      const response = await fetch('/activities/announcements');
       
       if (!response.ok) {
         throw new Error(`Failed to fetch announcements: ${response.statusText}`);
