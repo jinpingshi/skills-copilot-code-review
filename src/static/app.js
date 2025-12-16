@@ -25,6 +25,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
 
+  // Announcement elements
+  const announcementButton = document.getElementById("announcement-button");
+  const announcementDialog = document.getElementById("announcement-dialog");
+  const closeDialogButton = document.getElementById("close-dialog-button");
+
   // Activity categories with corresponding colors
   const activityTypes = {
     sports: { label: "Sports", color: "#e8f5e9", textColor: "#2e7d32" },
@@ -234,25 +239,259 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300);
   }
 
-  // Event listeners for authentication
-  loginButton.addEventListener("click", openLoginModal);
-  logoutButton.addEventListener("click", logout);
-  closeLoginModal.addEventListener("click", closeLoginModalHandler);
+  // Open announcement dialog
+  announcementButton.addEventListener("click", () => {
+    announcementDialog.classList.remove("hidden");
+  });
 
-  // Close login modal when clicking outside
-  window.addEventListener("click", (event) => {
-    if (event.target === loginModal) {
-      closeLoginModalHandler();
+  // Close announcement dialog
+  closeDialogButton.addEventListener("click", () => {
+    announcementDialog.classList.add("hidden");
+  });
+
+  // Fetch announcements
+  async function fetchAnnouncements() {
+    try {
+      if (!currentUser) {
+        const announcementList = document.getElementById("announcement-list");
+        announcementList.innerHTML = "<li>Please log in to view announcements</li>";
+        return;
+      }
+
+      const response = await fetch('/activities/announcements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: currentUser.username })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch announcements: ${response.statusText}`);
+      }
+
+      const announcements = await response.json();
+
+      const announcementList = document.getElementById("announcement-list");
+      announcementList.innerHTML = "";
+
+      if (announcements.length === 0) {
+        
+        const strong = document.createElement("strong");
+        strong.textContent = announcement.title;
+        li.appendChild(strong);
+
+        li.appendChild(document.createElement("br"));
+
+        const small = document.createElement("small");
+        small.textContent = announcement.content;
+        li.appendChild(small);
+
+        li.appendChild(document.createElement("br"));
+
+        const em = document.createElement("em");
+        em.textContent = `Expires: ${announcement.expiration_date}`;
+        li.appendChild(em);
+        return;
+      }
+
+      announcements.forEach((announcement) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${announcement.title}</strong><br><small>${announcement.content}</small><br><em>Expires: ${announcement.expiration_date}</em>`;
+        announcementList.appendChild(li);
+      });
+    } catch (error) {
+      console.error("Failed to fetch announcements", error);
+      const announcementList = document.getElementById("announcement-list");
+      announcementList.innerHTML = "<li>Error loading announcements</li>";
     }
-  });
+  }
 
-  // Handle login form submission
-  loginForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    await login(username, password);
-  });
+  // Fetch announcements on dialog open
+
+
+  // Initialize filters from active elements
+  function initializeFilters() {
+    // Initialize day filter
+    const activeDayFilter = document.querySelector(".day-filter.active");
+    if (activeDayFilter) {
+      currentDay = activeDayFilter.dataset.day;
+    }
+
+    // Initialize time filter
+    const activeTimeFilter = document.querySelector(".time-filter.active");
+    if (activeTimeFilter) {
+      currentTimeRange = activeTimeFilter.dataset.time;
+    }
+  }
+
+  // Function to set day filter
+  function setDayFilter(day) {
+    currentDay = day;
+
+    // Update active class
+    dayFilters.forEach((btn) => {
+      if (btn.dataset.day === day) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    fetchActivities();
+  }
+
+  // Function to set time range filter
+  function setTimeRangeFilter(timeRange) {
+    currentTimeRange = timeRange;
+
+    // Update active class
+    timeFilters.forEach((btn) => {
+      if (btn.dataset.time === timeRange) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    fetchActivities();
+  }
+
+  // Check if user is already logged in (from localStorage)
+  function checkAuthentication() {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+        updateAuthUI();
+        // Verify the stored user with the server
+        validateUserSession(currentUser.username);
+      } catch (error) {
+        console.error("Error parsing saved user", error);
+        logout(); // Clear invalid data
+      }
+    }
+
+    // Set authentication class on body
+    updateAuthBodyClass();
+  }
+
+  // Validate user session with the server
+  async function validateUserSession(username) {
+    try {
+      const response = await fetch(
+        `/auth/check-session?username=${encodeURIComponent(username)}`
+      );
+
+      if (!response.ok) {
+        // Session invalid, log out
+        logout();
+        return;
+      }
+
+      // Session is valid, update user data
+      const userData = await response.json();
+      currentUser = userData;
+      localStorage.setItem("currentUser", JSON.stringify(userData));
+      updateAuthUI();
+    } catch (error) {
+      console.error("Error validating session:", error);
+    }
+  }
+
+  // Update UI based on authentication state
+  function updateAuthUI() {
+    if (currentUser) {
+      loginButton.classList.add("hidden");
+      userInfo.classList.remove("hidden");
+      displayName.textContent = currentUser.display_name;
+    } else {
+      loginButton.classList.remove("hidden");
+      userInfo.classList.add("hidden");
+      displayName.textContent = "";
+    }
+
+    updateAuthBodyClass();
+    // Refresh the activities to update the UI
+    fetchActivities();
+  }
+
+  // Update body class for CSS targeting
+  function updateAuthBodyClass() {
+    if (currentUser) {
+      document.body.classList.remove("not-authenticated");
+    } else {
+      document.body.classList.add("not-authenticated");
+    }
+  }
+
+  // Login function
+  async function login(username, password) {
+    try {
+      const response = await fetch(
+        `/auth/login?username=${encodeURIComponent(
+          username
+        )}&password=${encodeURIComponent(password)}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showLoginMessage(
+          data.detail || "Invalid username or password",
+          "error"
+        );
+        return false;
+      }
+
+      // Login successful
+      currentUser = data;
+      localStorage.setItem("currentUser", JSON.stringify(data));
+      updateAuthUI();
+      closeLoginModalHandler();
+      showMessage(`Welcome, ${currentUser.display_name}!`, "success");
+      return true;
+    } catch (error) {
+      console.error("Error during login:", error);
+      showLoginMessage("Login failed. Please try again.", "error");
+      return false;
+    }
+  }
+
+  // Logout function
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem("currentUser");
+    updateAuthUI();
+    showMessage("You have been logged out.", "info");
+  }
+
+  // Show message in login modal
+  function showLoginMessage(text, type) {
+    loginMessage.textContent = text;
+    loginMessage.className = `message ${type}`;
+    loginMessage.classList.remove("hidden");
+  }
+
+  // Open login modal
+  function openLoginModal() {
+    loginModal.classList.remove("hidden");
+    loginModal.classList.add("show");
+    loginMessage.classList.add("hidden");
+    loginForm.reset();
+  }
+
+  // Close login modal
+  function closeLoginModalHandler() {
+    loginModal.classList.remove("show");
+    setTimeout(() => {
+      loginModal.classList.add("hidden");
+      loginForm.reset();
+    }, 300);
+  }
 
   // Show loading skeletons
   function showLoadingSkeletons() {
