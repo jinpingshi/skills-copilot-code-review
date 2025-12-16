@@ -437,38 +437,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showMessage(`Welcome, ${currentUser.display_name}!`, "success");
       return true;
     } catch (error) {
-      console.error("Error during login:", error);
-      showLoginMessage("Login failed. Please try again.", "error");
-      return false;
-    }
-  }
-
-  // Logout function
-  function logout() {
-    currentUser = null;
-    localStorage.removeItem("currentUser");
-    updateAuthUI();
-    showMessage("You have been logged out.", "info");
-  }
-
-  // Show message in login modal
-  function showLoginMessage(text, type) {
-    loginMessage.textContent = text;
-    loginMessage.className = `message ${type}`;
-    loginMessage.classList.remove("hidden");
-  }
-
-  // Open login modal
-
-  // Close login modal
-  function closeLoginModalHandler() {
-    loginModal.classList.remove("show");
-    setTimeout(() => {
-      loginModal.classList.add("hidden");
-      loginForm.reset();
-    }, 300);
-  }
-
   // Show loading skeletons
   function showLoadingSkeletons() {
     activitiesList.innerHTML = "";
